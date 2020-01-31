@@ -101,6 +101,7 @@ class Experiment(object):
             self._resume_runs)
         yield run
       except SkipRun:
+        print('Skipping')
         continue
       except StopExperiment:
         print('Stopping.')

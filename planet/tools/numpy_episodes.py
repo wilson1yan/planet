@@ -127,8 +127,7 @@ def dummy_loader(reader, directory, batch_size):
 
 
 def episode_reader(filename, resize=None, max_length=None, action_noise=None):
-  with tf.gfile.Open(filename, 'rb') as file_:
-    episode = np.load(file_)
+  episode = np.load(filename)
   episode = {key: _convert_type(episode[key]) for key in episode.keys()}
   episode['return'] = np.cumsum(episode['reward'])
   if max_length:
