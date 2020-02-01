@@ -17,7 +17,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from tensorflow_probability import distributions as tfd
+import numpy as np
 
 from planet import tools
 from planet.models import base
@@ -70,6 +70,24 @@ class CPCM(base.Base):
   def features_from_state(self, state):
     """Extract features for the decoder network from a prior or posterior."""
     return tf.concat([state['state'], state['belief']], -1)
+
+  def cpc_from_states(self, posterior, prior):
+    # posterior B x T x H, prior B x T x H
+    b, t, h = tools.shape(posterior)
+    z_pos, z_next = posterior['state'], prior['state']
+    z_pos = tf.reshape(z_pos, [b * t, h]) # B * T x H
+    z_next = tf.reshape(z_next, [b * t, h]) # B * T x H
+    pos_log_density = -tf.reduce_sum(tf.square(z_pos - z_next), axis=-1, keepdims=True) # B * T x 1
+    dot_product = tf.matmul(z_next, z_pos, transpose_b=True) # B * T x B * T
+    z_next_sqnorm = tf.reduce_sum(z_next ** 2, axis=-1, keepdims=True) # B * T x 1
+    z_pos_sqnorm = tf.expand_dims(tf.reduce_sum(z_pos ** 2, axis=-1), axis=0) # 1 x B * T
+    neg_log_density = -(z_next_sqnorm - 2 * dot_product + z_pos_sqnorm) # B * T x B * T
+    neg_log_density = neg_log_density - 1e10 * tf.eye(b * t)
+
+    log_density = tf.concat((neg_log_density, pos_log_density), axis=1) # B * T x B * T + 1
+    log_density = tf.nn.log_softmax(log_density, axis=1)
+    loss = -tf.reduce_mean(log_density[:, -1])
+    return loss
 
   def _transition(self, prev_state, prev_action, zero_obs):
     """Compute prior next state by applying the transition dynamics."""
