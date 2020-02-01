@@ -46,7 +46,7 @@ class CPCM(base.Base):
 
   def __init__(
       self, state_size, belief_size, embed_size,
-      future_rnn=True, mean_only=False, min_stddev=0.1, activation=tf.nn.elu,
+      future_rnn=True, activation=tf.nn.elu,
       num_layers=1):
     self._state_size = state_size
     self._belief_size = belief_size
@@ -54,8 +54,6 @@ class CPCM(base.Base):
     self._future_rnn = future_rnn
     self._cell = tf.contrib.rnn.GRUBlockCell(self._belief_size)
     self._kwargs = dict(units=self._embed_size, activation=activation)
-    self._mean_only = mean_only
-    self._min_stddev = min_stddev
     self._num_layers = num_layers
     super(CPCM, self).__init__(
         tf.make_template('transition', self._transition),
@@ -64,10 +62,14 @@ class CPCM(base.Base):
   @property
   def state_size(self):
     return {
-        'mean': self._state_size,
+        'state': self._state_size,
         'belief': self._belief_size,
         'rnn_state': self._belief_size,
     }
+
+  def features_from_state(self, state):
+    """Extract features for the decoder network from a prior or posterior."""
+    return tf.concat([state['state'], state['belief']], -1)
 
   def _transition(self, prev_state, prev_action, zero_obs):
     """Compute prior next state by applying the transition dynamics."""

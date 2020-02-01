@@ -120,7 +120,7 @@ def _model_components(config, params):
   config.heads.image = config.decoder
   size = params.get('model_size', 200)
   state_size = params.get('state_size', 30)
-  model = params.get('model', 'rssm')
+  model = params.get('model', 'cpcm')
   if model == 'ssm':
     config.cell = tools.bind(
         models.SSM, state_size, size,
@@ -146,6 +146,10 @@ def _model_components(config, params):
         params.get('drnn_decoder_to_encoder', False),
         params.get('drnn_decoder_to_sample', True),
         params.get('drnn_action_to_decoder', False))
+  elif params.model == 'cpcm':
+    config.cell = tools.bind(
+        models.CPCM, state_size, size, size,
+        config.activation)
   else:
     raise NotImplementedError("Unknown model '{}.".format(params.model))
   return config

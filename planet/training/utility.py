@@ -190,6 +190,7 @@ def train(model_fn, datasets, logdir, config):
 
 
 def compute_objectives(posterior, prior, target, graph, config):
+  import ipdb; ipdb.set_trace()
   raw_features = graph.cell.features_from_state(posterior)
   heads = graph.heads
   objectives = []
@@ -206,9 +207,7 @@ def compute_objectives(posterior, prior, target, graph, config):
       exclude = None
 
     if name == 'divergence':
-      loss = graph.cell.divergence_from_states(posterior, prior)
-      if config.free_nats is not None:
-        loss = tf.maximum(0.0, loss - float(config.free_nats))
+      loss = graph.cell.cpc_from_states(posterior, prior)
       objectives.append(Objective('divergence', loss, min, include, exclude))
 
     elif name == 'overshooting':
