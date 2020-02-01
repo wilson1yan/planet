@@ -59,7 +59,7 @@ def define_summaries(graph, config, cleanups):
   with tf.variable_scope('closedloop'):
     prior, posterior = tools.unroll.closed_loop(
         graph.cell, graph.embedded, graph.data['action'], config.debug)
-    summaries += summary.state_summaries(graph.cell, prior, posterior, mask)
+    # summaries += summary.state_summaries(graph.cell, prior, posterior, mask)
     with tf.variable_scope('prior'):
       prior_features = graph.cell.features_from_state(prior)
       prior_dists = {
@@ -88,7 +88,7 @@ def define_summaries(graph, config, cleanups):
     summaries += summary.dist_summaries(state_dists, graph.data, mask)
     summaries += summary.image_summaries(
         state_dists['image'], config.postprocess_fn(graph.data['image']))
-    summaries += summary.state_summaries(graph.cell, state, posterior, mask)
+    # summaries += summary.state_summaries(graph.cell, state, posterior, mask)
     with tf.control_dependencies(plot_summaries):
       plot_summary = summary.prediction_summaries(
           state_dists, graph.data, state)

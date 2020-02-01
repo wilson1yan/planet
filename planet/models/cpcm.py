@@ -65,37 +65,13 @@ class CPCM(base.Base):
   def state_size(self):
     return {
         'mean': self._state_size,
-        'stddev': self._state_size,
-        'sample': self._state_size,
         'belief': self._belief_size,
         'rnn_state': self._belief_size,
     }
 
-  def dist_from_state(self, state, mask=None):
-    """Extract the latent distribution from a prior or posterior state."""
-    if mask is not None:
-      stddev = tools.mask(state['stddev'], mask, value=1)
-    else:
-      stddev = state['stddev']
-    dist = tfd.MultivariateNormalDiag(state['mean'], stddev)
-    return dist
-
-  def features_from_state(self, state):
-    """Extract features for the decoder network from a prior or posterior."""
-    return tf.concat([state['sample'], state['belief']], -1)
-
-  def divergence_from_states(self, lhs, rhs, mask=None):
-    """Compute the divergence measure between two states."""
-    lhs = self.dist_from_state(lhs, mask)
-    rhs = self.dist_from_state(rhs, mask)
-    divergence = tfd.kl_divergence(lhs, rhs)
-    if mask is not None:
-      divergence = tools.mask(divergence, mask)
-    return divergence
-
   def _transition(self, prev_state, prev_action, zero_obs):
     """Compute prior next state by applying the transition dynamics."""
-    hidden = tf.concat([prev_state['sample'], prev_action], -1)
+    hidden = tf.concat([prev_state['state'], prev_action], -1)
     for _ in range(self._num_layers):
       hidden = tf.layers.dense(hidden, **self._kwargs)
     belief, rnn_state = self._cell(hidden, prev_state['rnn_state'])
@@ -104,16 +80,8 @@ class CPCM(base.Base):
     for _ in range(self._num_layers):
       hidden = tf.layers.dense(hidden, **self._kwargs)
     mean = tf.layers.dense(hidden, self._state_size, None)
-    stddev = tf.layers.dense(hidden, self._state_size, tf.nn.softplus)
-    stddev += self._min_stddev
-    if self._mean_only:
-      sample = mean
-    else:
-      sample = tfd.MultivariateNormalDiag(mean, stddev).sample()
     return {
-        'mean': mean,
-        'stddev': stddev,
-        'sample': sample,
+        'state': mean,
         'belief': belief,
         'rnn_state': rnn_state,
     }
@@ -125,16 +93,8 @@ class CPCM(base.Base):
     for _ in range(self._num_layers):
       hidden = tf.layers.dense(hidden, **self._kwargs)
     mean = tf.layers.dense(hidden, self._state_size, None)
-    stddev = tf.layers.dense(hidden, self._state_size, tf.nn.softplus)
-    stddev += self._min_stddev
-    if self._mean_only:
-      sample = mean
-    else:
-      sample = tfd.MultivariateNormalDiag(mean, stddev).sample()
     return {
-        'mean': mean,
-        'stddev': stddev,
-        'sample': sample,
+        'state': mean,
         'belief': prior['belief'],
         'rnn_state': prior['rnn_state'],
     }
