@@ -222,8 +222,6 @@ def compute_objectives(posterior, prior, target, graph, config):
       if config.os_stop_posterior_grad:
         posteriors = tools.nested.map(tf.stop_gradient, posteriors)
       loss = graph.cell.divergence_from_states(posteriors, priors)
-      if config.free_nats is not None:
-        loss = tf.maximum(0.0, loss - float(config.free_nats))
       objectives.append(Objective('overshooting', loss, min, include, exclude))
 
     else:
