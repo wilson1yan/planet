@@ -89,7 +89,7 @@ def define_summaries(graph, config, cleanups):
     # summaries += summary.image_summaries(
     #     state_dists['image'], config.postprocess_fn(graph.data['image']))
     # summaries += summary.state_summaries(graph.cell, state, posterior, mask)
-    with tf.control_dependencies(plot_summaries):
+    # with tf.control_dependencies(plot_summaries):
       # plot_summary = summary.prediction_summaries(
       #     state_dists, graph.data, state)
       # plot_summaries += plot_summary
