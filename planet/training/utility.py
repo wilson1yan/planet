@@ -194,7 +194,6 @@ def compute_objectives(posterior, prior, target, graph, config):
   heads = graph.heads
   objectives = []
   for name, scale in config.loss_scales.items():
-    import ipdb; ipdb.set_trace()
     if config.loss_scales[name] == 0.0:
       continue
     if name in config.heads and name not in config.gradient_heads:
