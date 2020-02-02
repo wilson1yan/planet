@@ -8,17 +8,17 @@ import os
 
 
 def worker(gpu_id, max_per_gpu, exps):
-    env = os.environ.copy()
-    env['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
+    sh_env = os.environ.copy()
+    sh_env['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
 
     processes = []
     for exp in exps:
         env, run_id, div_scale = exp
-        args = f"python -m planet.scripts.train --logdir logs/{env}/run_{run_id}" + \
+        args = f"python -m planet.scripts.train --logdir logs/cpc_{env}_divscale{div_scale}/run_{run_id} " + \
                f"--params '{{tasks: [{env}], model: cpcm, divergence_scale: {div_scale}}}'"
         print('Running', args)
         args = shlex.split(args)
-        processes.append(subprocess.Popen(args, env=env))
+        processes.append(subprocess.Popen(args, env=sh_env))
 
         if len(processes) >= max_per_gpu:
             [p.wait() for p in processes]
@@ -30,12 +30,11 @@ def worker(gpu_id, max_per_gpu, exps):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--n_gpus', type=int, default=4)
-    parser.add_argument('--max_per_gpu', type=int, default=2)
-    parser.add_argument('--env', type=str, default='cheetah_run')
+    parser.add_argument('--max_per_gpu', type=int, default=4)
     parser.add_argument('--n_runs', type=int, default=2)
     args = parser.parse_args()
 
-    envs = [args.env]
+    envs = ['cheetah_run', 'cartpole_swingup', 'finger_spin', 'walker_walk']
     run_ids = list(range(args.n_runs))
     div_scales = [10, 100]
 
