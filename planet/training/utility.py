@@ -190,7 +190,6 @@ def train(model_fn, datasets, logdir, config):
 
 
 def compute_objectives(posterior, prior, target, graph, config):
-  import ipdb; ipdb.set_trace()
   raw_features = graph.cell.features_from_state(posterior)
   heads = graph.heads
   objectives = []

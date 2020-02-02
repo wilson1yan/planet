@@ -78,7 +78,7 @@ def debug(config, params):
 
 
 def _data_processing(config, params):
-  config.batch_shape = params.get('batch_shape', (50, 50))
+  config.batch_shape = params.get('batch_shape', (64, 3))
   config.num_chunks = params.get('num_chunks', 1)
   image_bits = params.get('image_bits', 5)
   config.preprocess_fn = tools.bind(
@@ -104,7 +104,7 @@ def _data_processing(config, params):
 
 
 def _model_components(config, params):
-  config.gradient_heads = params.get('gradient_heads', ['image', 'reward'])
+  config.gradient_heads = params.get('gradient_heads', ['reward'])
   network = getattr(networks, params.get('network', 'conv_ha'))
   config.activation = ACTIVATIONS[params.get('activation', 'relu')]
   config.num_layers = params.get('num_layers', 3)
@@ -115,9 +115,9 @@ def _model_components(config, params):
       units=config.num_units,
       activation=config.activation)
   config.encoder = network.encoder
-  config.decoder = network.decoder
+  # config.decoder = network.decoder
   config.heads = tools.AttrDict(_unlocked=True)
-  config.heads.image = config.decoder
+  # config.heads.image = config.decoder
   size = params.get('model_size', 200)
   state_size = params.get('state_size', 30)
   model = params.get('model', 'cpcm')
@@ -206,7 +206,7 @@ def _loss_functions(config, params):
 def _training_schedule(config, params):
   config.train_steps = int(params.get('train_steps', 50000))
   config.test_steps = int(params.get('test_steps', 50))
-  config.max_steps = int(params.get('max_steps', 5e7))
+  config.max_steps = int(params.get('max_steps', 2.5e6))
   config.train_log_every = config.train_steps
   config.train_checkpoint_every = None
   config.test_checkpoint_every = int(
