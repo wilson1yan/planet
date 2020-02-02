@@ -79,7 +79,7 @@ def debug(config, params):
 
 def _data_processing(config, params):
   config.batch_shape = params.get('batch_shape', (128, 2))
-  config.num_chunks = params.get('num_chunks', 1)
+  config.num_chunks = params.get('num_chunks', None)
   image_bits = params.get('image_bits', 5)
   config.preprocess_fn = tools.bind(
       tools.preprocess.preprocess, bits=image_bits)
@@ -190,7 +190,6 @@ def _loss_functions(config, params):
     defaults = {'reward': 10.0}
     scale = defaults[head] if head in defaults else 1.0
     config.loss_scales[head] = params.get(head + '_loss_scale', scale)
-  config.free_nats = params.get('free_nats', 3.0)
   config.overshooting_distance = params.get('overshooting_distance', 0)
   config.os_stop_posterior_grad = params.get('os_stop_posterior_grad', True)
   config.optimizers = tools.AttrDict(_unlocked=True)

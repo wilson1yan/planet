@@ -47,7 +47,7 @@ class CPCM(base.Base):
   def __init__(
       self, state_size, belief_size, embed_size,
       future_rnn=True, activation=tf.nn.elu,
-      num_layers=1):
+      num_layers=1, n_neg=128):
     self._state_size = state_size
     self._belief_size = belief_size
     self._embed_size = embed_size
@@ -55,6 +55,7 @@ class CPCM(base.Base):
     self._cell = tf.contrib.rnn.GRUBlockCell(self._belief_size)
     self._kwargs = dict(units=self._embed_size, activation=activation)
     self._num_layers = num_layers
+    self._n_neg = n_neg
     super(CPCM, self).__init__(
         tf.make_template('transition', self._transition),
         tf.make_template('posterior', self._posterior))
