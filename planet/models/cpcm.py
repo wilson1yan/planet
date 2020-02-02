@@ -73,7 +73,7 @@ class CPCM(base.Base):
 
   def cpc_from_states(self, posterior, prior):
     # posterior B x T x H, prior B x T x H
-    b, t, h = tools.shape(posterior)
+    b, t, h = tools.shape(posterior['state'])
     z_pos, z_next = posterior['state'], prior['state']
     z_pos = tf.reshape(z_pos, [b * t, h]) # B * T x H
     z_next = tf.reshape(z_next, [b * t, h]) # B * T x H
