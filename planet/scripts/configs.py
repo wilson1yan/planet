@@ -184,6 +184,7 @@ def _loss_functions(config, params):
   for head in config.gradient_heads:
     assert head in config.heads, head
   config.loss_scales.divergence = params.get('divergence_scale', 1.0)
+  print('Divergence', config.loss_scales.divergence)
   config.loss_scales.global_divergence = params.get('global_div_scale', 0.0)
   config.loss_scales.overshooting = params.get('overshooting_scale', 0.0)
   for head in config.heads:
