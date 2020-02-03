@@ -86,8 +86,7 @@ class SSM(base.Base):
 
   def _posterior(self, prev_state, prev_action, obs):
     """Compute posterior state from previous state and current observation."""
-    prior = self._transition_tpl(prev_state, prev_action, tf.zeros_like(obs))
-    inputs = prior['state']
+    inputs = obs
     hidden = tf.layers.dense(inputs, **self._kwargs)
     mean = tf.layers.dense(hidden, self._state_size, None)
     return {

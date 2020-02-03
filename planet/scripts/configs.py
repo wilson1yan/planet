@@ -79,6 +79,8 @@ def debug(config, params):
 
 def _data_processing(config, params):
   config.batch_shape = params.get('batch_shape', (128, 2))
+  config.batch_shape = params.get('batch_shape', '128 2')
+  config.batch_shape = tuple(map(int, config.batch_shape.split(' ')))
   config.num_chunks = int(params.get('num_chunks', 1))
   config.stack_obs = params.get('stack_obs', False)
   config.n_stack_history = params.get('n_stack_history', 2)
