@@ -17,7 +17,6 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from tensorflow_probability import distributions as tfd
 
 from planet import tools
 from planet.models import base
@@ -40,12 +39,9 @@ class SSM(base.Base):
   """
 
   def __init__(
-      self, state_size, embed_size,
-      mean_only=False, activation=tf.nn.elu, min_stddev=1e-5):
+      self, state_size, embed_size, activation=tf.nn.elu):
     self._state_size = state_size
     self._embed_size = embed_size
-    self._mean_only = mean_only
-    self._min_stddev = min_stddev
     super(SSM, self).__init__(
         tf.make_template('transition', self._transition),
         tf.make_template('posterior', self._posterior))
@@ -54,64 +50,46 @@ class SSM(base.Base):
   @property
   def state_size(self):
     return {
-        'mean': self._state_size,
-        'stddev': self._state_size,
-        'sample': self._state_size,
+        'state': self._state_size,
     }
-
-  def dist_from_state(self, state, mask=None):
-    """Extract the latent distribution from a prior or posterior state."""
-    if mask is not None:
-      stddev = tools.mask(state['stddev'], mask, value=1)
-    else:
-      stddev = state['stddev']
-    dist = tfd.MultivariateNormalDiag(state['mean'], stddev)
-    return dist
 
   def features_from_state(self, state):
     """Extract features for the decoder network from a prior or posterior."""
-    return state['sample']
+    return state['state']
 
-  def divergence_from_states(self, lhs, rhs, mask=None):
-    """Compute the divergence measure between two states."""
-    lhs = self.dist_from_state(lhs, mask)
-    rhs = self.dist_from_state(rhs, mask)
-    divergence = tfd.kl_divergence(lhs, rhs)
-    if mask is not None:
-      divergence = tools.mask(divergence, mask)
-    return divergence
+  def cpc_from_states(self, posterior, prior):
+    # posterior B x T x H, prior B x T x H
+    z_pos, z_next = posterior['state'][:, :, 1:], prior['state'][:, :, 1:]
+    b, t, h = tools.shape(z_pos)
+    z_pos = tf.reshape(z_pos, [b * t, h]) # B * T x H
+    z_next = tf.reshape(z_next, [b * t, h]) # B * T x H
+    pos_log_density = -tf.reduce_sum(tf.square(z_pos - z_next), axis=-1, keepdims=True) # B * T x 1
+    dot_product = tf.matmul(z_next, z_pos, transpose_b=True) # B * T x B * T
+    z_next_sqnorm = tf.reduce_sum(z_next ** 2, axis=-1, keepdims=True) # B * T x 1
+    z_pos_sqnorm = tf.expand_dims(tf.reduce_sum(z_pos ** 2, axis=-1), axis=0) # 1 x B * T
+    neg_log_density = -(z_next_sqnorm - 2 * dot_product + z_pos_sqnorm) # B * T x B * T
+    neg_log_density = neg_log_density - 1e10 * tf.eye(b * t)
+
+    log_density = tf.concat((neg_log_density, pos_log_density), axis=1) # B * T x B * T + 1
+    log_density = tf.nn.log_softmax(log_density, axis=1)
+    loss = -tf.reduce_mean(log_density[:, -1])
+    return loss
 
   def _transition(self, prev_state, prev_action, zero_obs):
     """Compute prior next state by applying the transition dynamics."""
-    inputs = tf.concat([prev_state['sample'], prev_action], -1)
+    inputs = tf.concat([prev_state['state'], prev_action], -1)
     hidden = tf.layers.dense(inputs, **self._kwargs)
     mean = tf.layers.dense(hidden, self._state_size, None)
-    stddev = tf.layers.dense(hidden, self._state_size, tf.nn.softplus)
-    stddev += self._min_stddev
-    if self._mean_only:
-      sample = mean
-    else:
-      sample = tfd.MultivariateNormalDiag(mean, stddev).sample()
     return {
-        'mean': mean,
-        'stddev': stddev,
-        'sample': sample,
+        'state': mean,
     }
 
   def _posterior(self, prev_state, prev_action, obs):
     """Compute posterior state from previous state and current observation."""
     prior = self._transition_tpl(prev_state, prev_action, tf.zeros_like(obs))
-    inputs = tf.concat([prior['mean'], prior['stddev'], obs], -1)
+    inputs = prior['state']
     hidden = tf.layers.dense(inputs, **self._kwargs)
     mean = tf.layers.dense(hidden, self._state_size, None)
-    stddev = tf.layers.dense(hidden, self._state_size, tf.nn.softplus)
-    stddev += self._min_stddev
-    if self._mean_only:
-      sample = mean
-    else:
-      sample = tfd.MultivariateNormalDiag(mean, stddev).sample()
     return {
-        'mean': mean,
-        'stddev': stddev,
-        'sample': sample,
+        'state': mean,
     }
