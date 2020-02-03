@@ -64,27 +64,9 @@ def chunk_sequence(sequence, chunk_length, randomize=True, num_chunks=None, stac
       max_offset = 0
       offset = 0
 
-    if stack_obs:
-      offset_end = offset + used_length
-      offset = tf.maximum(offset - n_stack_history + 1, tf.zeros([], dtype=tf.int32))
-      zero_padding_amt = -tf.minimum(offset - n_stack_history + 1, tf.zeros([], dtype=tf.int32))
-
-      clipped = nested.map(
-          lambda tensor: tensor[offset:offset_end],
-          sequence)
-
-      images = clipped['image']
-      zero_padding = tf.zeros([zero_padding_amt] + images.shape[1:].as_list(), dtype=tf.uint8)
-      # Need to pad sequence if offset near beginning of an episode
-      images = tf.concat((zero_padding, images), axis=0)
-      # Stack images: (num_chunks * chunk_length, 64, 64, 12)
-      # channels in order from oldest image to latest (current observation)
-      stacked_images = tf.concat([images[t: t + used_length] for t in range(n_stack_history)], axis=-1)
-      clipped['image'] = stacked_images
-    else:
-      clipped = nested.map(
-        lambda tensor: tensor[offset:offset + used_length],
-        sequence)
+    clipped = nested.map(
+      lambda tensor: tensor[offset:offset + used_length],
+      sequence)
 
     chunks = nested.map(
         lambda tensor: tf.reshape(
