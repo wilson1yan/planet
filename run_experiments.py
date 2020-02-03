@@ -34,7 +34,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_runs', type=int, default=2)
     args = parser.parse_args()
 
-    envs = ['cheetah_run', 'cartpole_swingup', 'finger_spin', 'walker_walk']
+    envs = ['cheetah_run', 'finger_spin']
     run_ids = list(range(args.n_runs))
     batch_shapes = ['128 2', '3 50']
 
