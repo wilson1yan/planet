@@ -74,6 +74,9 @@ class SSM(base.Base):
 
   def divergence_from_states(self, lhs, rhs, mask=None):
     """Compute the divergence measure between two states."""
+    lhs = {'mean': lhs['mean'][:, 1:], 'stddev': lhs['stddev'][:, 1:], 'sample': lhs['sample'][:, 1:]}
+    rhs = {'mean': rhs['mean'][:, 1:], 'stddev': rhs['stddev'][:, 1:], 'sample': rhs['sample'][:, 1:]}
+
     lhs = self.dist_from_state(lhs, mask)
     rhs = self.dist_from_state(rhs, mask)
     divergence = tfd.kl_divergence(lhs, rhs)
