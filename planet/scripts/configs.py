@@ -124,9 +124,7 @@ def _model_components(config, params):
   if model == 'ssm':
     config.cell = tools.bind(
         models.SSM, state_size, size,
-        params.get('mean_only', False),
-        config.activation,
-        params.get('min_stddev', 1e-1))
+        config.activation)
   elif model == 'rssm':
     config.cell = tools.bind(
         models.RSSM, state_size, size, size,
