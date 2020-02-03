@@ -142,6 +142,11 @@ def _dm_control_env(
     env = control.wrappers.NormalizeActions(env)
   env = control.wrappers.MaximumDuration(env, max_length)
   env = control.wrappers.PixelObservations(env, (64, 64), np.uint8, 'image')
+
+  if params.get('stack_obs', False):
+    env = control.wrappers.PixelStack(env, n_stack_history=int(params.get('n_stack_history', 2)),
+                                      size=(64, 64), dtype=np.uint8, key='image')
+
   env = control.wrappers.ConvertTo32Bit(env)
   return env
 

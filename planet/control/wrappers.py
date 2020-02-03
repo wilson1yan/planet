@@ -127,6 +127,46 @@ class SelectObservations(object):
     obs = {key: obs[key] for key in self._keys}
     return obs
 
+class PixelStack(object):
+
+  def __init__(self, env, n_stack_history=2, size=(64, 64), dtype=np.uint8, key='image'):
+    self._env = env
+    self._n_stack_history = n_stack_history
+    self._dtype = dtype
+    self._key = key
+    self._size = size
+
+    self._image_history = [np.zeros(self._size + (3,), dtype=self._dtype)
+                           for _ in range(self._n_stack_history)]
+
+  def __getattr__(self, name):
+    return getattr(self._env, name)
+
+  @property
+  def observation_space(self):
+    high = {np.uint8: 255, np.float: 1.0}[self._dtype]
+    image = gym.spaces.Box(0, high, self._size + (3 * self._n_stack_history,), dtype=self._dtype)
+    spaces = self._env.observation_space.spaces.copy()
+    assert self._key in spaces
+    spaces[self._key] = image
+    return gym.spaces.Dict(spaces)
+
+  @property
+  def action_space(self):
+    return self._env.action_space
+
+  def step(self, action):
+    obs, reward, done, info = self._env.step(action)
+    self._image_history = self._image_history[1:] + [obs['image'].copy()]
+    obs[self._key] = np.concatenate(self._image_history, axis=-1)
+    return obs, reward, done, info
+
+  def reset(self):
+    obs = self._env.reset()
+    obs[self._key] = np.concatenate([np.zeros(self._size + (3,), dtype=self._dtype)
+                                     for _ in range(self._n_stack_history - 1)] + [obs['image'].copy()], axis=-1)
+    return obs
+
 
 class PixelObservations(object):
 

@@ -14,8 +14,8 @@ def worker(gpu_id, max_per_gpu, exps):
     processes = []
     for exp in exps:
         env, run_id, batch_shape = exp
-        args = f"python -m planet.scripts.train --logdir logs/planet_ssm_bs{'_'.join(map(str, batch_shape))}/{env}/run_{run_id} " + \
-               f"--params '{{tasks: [{env}], model: ssm, batch_shape: {batch_shape}}}'"
+        args = f"python -m planet.scripts.train --logdir logs/planet_ssm_bs{batch_shape}_stack4/{env}/run_{run_id} " + \
+               f"--params '{{tasks: [{env}], model: ssm, batch_shape: {batch_shape}, stack_obs: True, n_stack_history: 4}}'"
         print('Running', args)
         args = shlex.split(args)
         processes.append(subprocess.Popen(args, env=sh_env))
