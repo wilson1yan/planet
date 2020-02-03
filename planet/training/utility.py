@@ -227,7 +227,10 @@ def compute_objectives(posterior, prior, target, graph, config):
       objectives.append(Objective('overshooting', loss, min, include, exclude))
 
     else:
-      logprob = heads[name](features).log_prob(target[name])
+      if name == 'image':
+        logprob = heads[name](features).log_prob(target[name][:, : ,:, :, -3:])
+      else:
+        logprob = heads[name](features).log_prob(target[name])
       objectives.append(Objective(name, logprob, max, include, exclude))
 
   objectives = [o._replace(value=tf.reduce_mean(o.value)) for o in objectives]

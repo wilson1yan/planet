@@ -40,6 +40,7 @@ def encoder(obs):
 
 def decoder(state, data_shape):
   """Compute the data distribution of an observation from its state."""
+  data_shape[-1] = 3
   kwargs = dict(strides=2, activation=tf.nn.relu)
   hidden = tf.layers.dense(state, 1024, None)
   hidden = tf.reshape(hidden, [-1, 1, 1, hidden.shape[-1].value])

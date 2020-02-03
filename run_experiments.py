@@ -14,7 +14,7 @@ def worker(gpu_id, max_per_gpu, exps):
     processes = []
     for exp in exps:
         env, run_id, batch_shape = exp
-        args = f"python -m planet.scripts.train --logdir logs/planet_ssm_bs{batch_shape}_stack4/{env}/run_{run_id} " + \
+        args = f"python -m planet.scripts.train --logdir logs/planet_ssm_bs{'_'.join(batch_shape.split(' '))}_stack4/{env}/run_{run_id} " + \
                f"--params '{{tasks: [{env}], model: ssm, batch_shape: {batch_shape}, stack_obs: True, n_stack_history: 4}}'"
         print('Running', args)
         args = shlex.split(args)
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     envs = ['cheetah_run', 'cartpole_swingup', 'finger_spin', 'walker_walk']
     run_ids = list(range(args.n_runs))
-    batch_shapes = [(128, 2), (3, 50)]
+    batch_shapes = ['128 2', '3 50']
 
     exps = list(itertools.product(envs, run_ids, batch_shapes))
     print(f'Running {len(exps)} experiments')
