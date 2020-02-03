@@ -32,7 +32,7 @@ from planet.tools import chunk_sequence
 
 def numpy_episodes(
     train_dir, test_dir, shape, reader=None, loader=None,
-    num_chunks=None, preprocess_fn=None):
+    num_chunks=None, preprocess_fn=None, stack_obs=False, n_stack_history=2):
   """Read sequences stored as compressed Numpy files as a TensorFlow dataset.
 
   Args:
@@ -58,7 +58,8 @@ def numpy_episodes(
       functools.partial(loader, reader, test_dir, shape[0]),
       dtypes, shapes)
   chunking = lambda x: tf.data.Dataset.from_tensor_slices(
-      chunk_sequence.chunk_sequence(x, shape[1], True, num_chunks))
+      chunk_sequence.chunk_sequence(x, shape[1], True, num_chunks,
+                                    stack_obs=stack_obs, n_stack_history=n_stack_history))
   def sequence_preprocess_fn(sequence):
     if preprocess_fn:
       sequence['image'] = preprocess_fn(sequence['image'])

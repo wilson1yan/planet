@@ -68,7 +68,10 @@ def process(logdir, args):
       reader=config.data_reader,
       loader=config.data_loader,
       num_chunks=config.num_chunks,
-      preprocess_fn=config.preprocess_fn)
+      preprocess_fn=config.preprocess_fn,
+      stack_obs=config.stack_obs,
+      n_stack_history=config.n_stack_history,
+  )
   for score in training.utility.train(
       training.define_model, dataset, logdir, config):
     yield score
