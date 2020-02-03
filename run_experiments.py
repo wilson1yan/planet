@@ -13,9 +13,9 @@ def worker(gpu_id, max_per_gpu, exps):
 
     processes = []
     for exp in exps:
-        env, run_id, div_scale = exp
-        args = f"python -m planet.scripts.train --logdir logs/cpc_{env}_divscale{div_scale}/run_{run_id} " + \
-               f"--params '{{tasks: [{env}], model: cpcm, divergence_scale: {div_scale}}}'"
+        method, env, run_id, div_scale = exp
+        args = f"python -m planet.scripts.train --logdir logs/cpc_{method}_{env}_divscale{div_scale}/run_{run_id} " + \
+               f"--params '{{tasks: [{env}], model: {method}, divergence_scale: {div_scale}}}'"
         print('Running', args)
         args = shlex.split(args)
         processes.append(subprocess.Popen(args, env=sh_env))
@@ -34,11 +34,13 @@ if __name__ == '__main__':
     parser.add_argument('--n_runs', type=int, default=2)
     args = parser.parse_args()
 
-    envs = ['cheetah_run', 'cartpole_swingup', 'finger_spin', 'walker_walk']
+    methods = ['cpcm', 'ssm']
+    #envs = ['cheetah_run', 'cartpole_swingup', 'finger_spin', 'walker_walk']
+    envs = ['finger_spin']
     run_ids = list(range(args.n_runs))
-    div_scales = [10, 100]
+    div_scales = [1, 10]
 
-    exps = list(itertools.product(envs, run_ids, div_scales))
+    exps = list(itertools.product(methods, envs, run_ids, div_scales))
     print(f'Running {len(exps)} experiments')
     n_exps = len(exps)
     chunk_size = math.ceil(n_exps / args.n_gpus)
