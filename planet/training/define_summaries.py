@@ -105,7 +105,7 @@ def define_summaries(graph, config, cleanups):
           lambda: utility.simulate_episodes(
               config, params, graph, cleanups,
               expensive_summaries=False,
-              gif_summary=True,
+              gif_summary=False,
               name=name),
           lambda: ('', 0.0),
           name='should_simulate_' + params.task.name)

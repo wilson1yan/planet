@@ -36,10 +36,10 @@ if __name__ == '__main__':
 
     methods = ['ssm']
     #envs = ['cheetah_run', 'cartpole_swingup', 'finger_spin', 'walker_walk']
-    envs = ['finger_spin', 'cheetah_run']
+    envs = ['cheetah_run']
     run_ids = list(range(args.n_runs))
     div_scales = [1, 10]
-    batch_shapes = ['128 2', '3 50']
+    batch_shapes = ['128 2', '50 3']
 
     exps = list(itertools.product(methods, envs, run_ids, div_scales, batch_shapes))
     print(f'Running {len(exps)} experiments')
